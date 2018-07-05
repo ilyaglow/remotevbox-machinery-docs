@@ -29,12 +29,12 @@ Keep in mind that you should import virtual machines for analysis by this user.
 
 Create a host-only network:
 ```bash
-cuckoo@cuckoohost:$ vboxmanage hostonlyif create
+cuckoo@host:$ vboxmanage hostonlyif create
 ```
 
 Set host IP-address:
 ```bash
-cuckoo@cuckoohost:$ vboxmanage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1
+cuckoo@host:$ vboxmanage hostonlyif ipconfig vboxnet0 --ip 192.168.56.1
 ```
 
 Attach network adapters of both virtual machines to vboxnet0 host-only interface. And change IP-address of the analysis and cuckoo vms.
@@ -54,7 +54,7 @@ VBOXWEB_USER=cuckoo       # created user
 
 Actually you can disable auth at all and it has its own valid *reasons* - no credentials to read from config files, no credentials to sniff over the wire (but of course you can easily reverse proxy your vboxwebservice behind nginx and terminate TLS on it):
 ```bash
-cuckoo@cuckoohost:$ vboxmanage setproperty websrvauthlibrary null
+cuckoo@host:$ vboxmanage setproperty websrvauthlibrary null
 ```
 
 ## Configure a shared storage
@@ -62,7 +62,7 @@ cuckoo@cuckoohost:$ vboxmanage setproperty websrvauthlibrary null
 The key requirement for remotevbox machinery to works is a shared storage that is used to store analysis dumps by Virtualbox Webservice and Cuckoo VM, so be cautious about permissions.
 
 ```bash
-cuckoo@cuckoohost:$ sshfs vbox@192.168.56.100:/mnt/share /home/cuckoo/share
+cuckoo@host:$ sshfs vbox@192.168.56.100:/mnt/share /home/cuckoo/share
 ```
 
 # Cuckoo VM configuring

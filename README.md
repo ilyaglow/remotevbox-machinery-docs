@@ -20,7 +20,7 @@ It is recommended to use a non-root user that will run Virtualbox Webservice. Co
 
 
 ```bash
-adduser cuckoo
+root@host:# adduser cuckoo
 ```
 
 Keep in mind that you should import virtual machines for analysis by this user.

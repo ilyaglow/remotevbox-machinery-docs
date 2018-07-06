@@ -118,8 +118,9 @@ Now you can try to browse `http://192.168.56.100:8080` from your host.
 
 # Network hardening
 
-## Restrict ssh access to the Cuckoo VM
-
-## Restrict access to vboxwebservice
+## Restrict access to host interface
+* to vboxwebservice only from Cuckoo VM
 
 ## Restrict access to Cuckoo VM
+* to resultserver from `192.168.56.0/24` subnet
+* to ssh and Cuckoo web from `192.168.56.1` only

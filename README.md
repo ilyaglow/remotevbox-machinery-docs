@@ -1,4 +1,7 @@
-This guide will cover a case of remotevbox machinery usage that shows how Cuckoo management services can work inside VirtualBox VM achieving a nested analysis feature.
+About
+-----
+
+This guide will cover a case of remotevbox machinery usage that shows how Cuckoo management services can work inside VirtualBox VM achieving a nested analysis feature. Of course you can build your own network setup and remotely control Virtualbox machines - the only thing you need is a shared storage between Virtualbox Web Service daemon and Cuckoo (see below).
 
 # How it works
 
@@ -52,21 +55,71 @@ VBOXWEB_HOST=192.168.56.1 # IP reachable from cuckoo vm
 VBOXWEB_USER=cuckoo       # created user
 ```
 
-Actually you can disable auth at all and it has its own valid *reasons* - no credentials to read from config files, no credentials to sniff over the wire (but of course you can easily reverse proxy your vboxwebservice behind nginx and terminate TLS on it):
+Actually you can disable auth at all and it has its own valid *reasons* - no credentials to steal from config files, no credentials to sniff over the wire (but of course you can easily reverse proxy your vboxwebservice behind nginx and terminate TLS on it):
 ```bash
 cuckoo@host:$ vboxmanage setproperty websrvauthlibrary null
 ```
 
 ## Configure a shared storage
 
-The key requirement for remotevbox machinery to works is a shared storage that is used to store analysis dumps by Virtualbox Webservice and Cuckoo VM, so be cautious about permissions.
+The key requirement for remotevbox machinery to work is a shared storage that is used to store analysis dumps by Virtualbox Webservice and Cuckoo VM, so be cautious about permissions. Assume you have `cuckoo` user on Cuckoo VM with strong password and openssh server installed. You `$CUCKOO_CWD` here is `/home/cuckoo/.cuckoo`:
 
 ```bash
-cuckoo@host:$ sshfs vbox@192.168.56.100:/mnt/share /home/cuckoo/share
+root@host:# mkdir /mnt/share && chown cuckoo:cuckoo /mnt/share
+root@host:# su -l cuckoo
+cuckoo@host:$ sshfs cuckoo@192.168.56.100:/mnt/share /home/cuckoo/.cuckoo/storage
+```
+
+Now you have a shared storage in `/mnt/share` on a host that maps to `/home/cuckoo/.cuckoo/storage` on a Cuckoo VM.
+
+Check that the `cuckoo` user has permissions to write to this storage:
+```bash
+cuckoo@host:$ echo > /mnt/share/test_file
 ```
 
 # Cuckoo VM configuring
 
+If you did a regular Cuckoo installation you should add `remotevbox-machinery` files by yourself - at the time of writing it isn't merged in upstream of Cuckoo.
+
+The `/usr/lib/python2.7/site-packages/cuckoo` is the path to your Cuckoo installation that could be different: if you use `virtual-env` (you do not need to run `wget` as *root* in this case):
+
+```
+root@cuckoovm:# wget -O /usr/lib/python2.7/site-packages/cuckoo/machinery/virtualbox_websrv.py https://raw.githubusercontent.com/ilyaglow/cuckoo/blob/remotevbox-machinery/cuckoo/machinery/virtualbox_websrv.py
+root@cuckoovm:# wget -O /usr/lib/python2.7/site-packages/cuckoo/common/config.py https://raw.githubusercontent.com/ilyaglow/cuckoo/blob/remotevbox-machinery/cuckoo/common/config.py
+```
+
 ## Configuring machinery
 
+Save the [virtualbox_webserv.conf](https://raw.githubusercontent.com/blacktop/docker-cuckoo/blob/master/vbox/conf/virtualbox_websrv.conf) to your `$CUCKOO_CWD/conf` directory and change the file to reflect your current settings:
+
+* Change `url` to `https://192.168.56.1:18083`
+* Set `user` and `password` to credentials of a cuckoo user on a host. You can empty its values, if you disabled authentication earlier.
+* Set `remote_storage` to your shared storage on a **host**, in our case it is `/mnt/share`.
+* Add your prepared analysis machine to `machines` section.
+* Set `ip` of the machine to IP-address in your host-only network, in our case `192.168.56.2`.
+* `resultserver_ip` according to previous step should be `192.168.56.100`.
+
+
+
+## Start Cuckoo
+
+Drop privileges to cuckoo user and check permissions of the shared storage:
+```bash
+cuckoo@cuckoovm:$ echo > /home/cuckoo/.cuckoo/storage/testfile
+```
+
+Start cuckoo daemons (its useful to run them on screen or tmux):
+```
+cuckoo@cuckoovm:$ cuckoo -d
+cuckoo@cuckoovm:$ cuckoo web runserver 192.168.56.100:8080
+```
+
+Now you can try to browse `http://192.168.56.100:8080` from your host.
+
 # Network hardening
+
+## Restrict ssh access to the Cuckoo VM
+
+## Restrict access to vboxwebservice
+
+## Restrict access to Cuckoo VM

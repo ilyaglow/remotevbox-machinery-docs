@@ -13,7 +13,7 @@ Traditional Virtualbox machinery works over a command line `vboxmanage` applicat
 * Prepared (with vmcloak for example) virtual machine to perform an analysis
 * Virtual machine with Cuckoo installed. You can find a lot of guides how to do it right. If you are familiar with docker and feel adventerous you can try a dockerized version from here https://github.com/ilyaglow/docker-cuckoo/tree/vbox-work - a modified version of @blacktop's [docker-cuckoo project](https://github.com/blacktop/docker-cuckoo).
 
-# Configure host
+# Host
 ## User management
 
 It is recommended to use a non-root user that will run Virtualbox Webservice. Couple reasons:
@@ -46,7 +46,7 @@ For the further simplicity we'll make it like the following:
 * Analysis VM `192.168.56.2`
 * Cuckoo VM `192.168.56.100`
 
-## Configure Virtualbox Webservice
+## Virtualbox Webservice
 
 Ensure that a file `/etc/default/virtualbox` has a following format:
 
@@ -60,7 +60,7 @@ Actually you can disable auth at all and it has its own valid *reasons* - no cre
 cuckoo@host:$ vboxmanage setproperty websrvauthlibrary null
 ```
 
-## Configure a shared storage
+## Shared storage
 
 The key requirement for remotevbox machinery to work is a shared storage that is used to store analysis dumps by Virtualbox Webservice and Cuckoo VM, so be cautious about permissions. Assume you have `cuckoo` user on Cuckoo VM with strong password and openssh server installed. You `$CUCKOO_CWD` here is `/home/cuckoo/.cuckoo`:
 
@@ -77,7 +77,7 @@ Check that the `cuckoo` user has permissions to write to this storage:
 cuckoo@host:$ echo > /mnt/share/test_file
 ```
 
-# Cuckoo VM configuring
+# Cuckoo VM
 
 If you did a regular Cuckoo installation you should add `remotevbox-machinery` files by yourself - at the time of writing it isn't merged in upstream of Cuckoo.
 
@@ -88,7 +88,7 @@ root@cuckoovm:# wget -O /usr/lib/python2.7/site-packages/cuckoo/machinery/virtua
 root@cuckoovm:# wget -O /usr/lib/python2.7/site-packages/cuckoo/common/config.py https://raw.githubusercontent.com/ilyaglow/cuckoo/blob/remotevbox-machinery/cuckoo/common/config.py
 ```
 
-## Configuring machinery
+## Remotevbox machinery
 
 Save the [virtualbox_webserv.conf](https://raw.githubusercontent.com/blacktop/docker-cuckoo/blob/master/vbox/conf/virtualbox_websrv.conf) to your `$CUCKOO_CWD/conf` directory and change the file to reflect your current settings:
 
@@ -101,7 +101,7 @@ Save the [virtualbox_webserv.conf](https://raw.githubusercontent.com/blacktop/do
 
 
 
-## Start Cuckoo
+## Cuckoo start
 
 Drop privileges to cuckoo user and check permissions of the shared storage:
 ```bash
